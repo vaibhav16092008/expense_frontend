@@ -71,7 +71,7 @@ export const CategorySpendingChart: React.FC<CategorySpendingChartProps> = ({
                       borderRadius: "12px",
                       fontSize: "12px",
                     }}
-                    formatter={(value: any) => [formatCurrency(Number(value || 0)), "Amount"]}
+                    formatter={(value: unknown) => [formatCurrency(Number(value || 0)), "Amount"]}
                   />
                 </PieChart>
               </ResponsiveContainer>

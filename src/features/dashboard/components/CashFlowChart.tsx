@@ -92,7 +92,7 @@ export const CashFlowChart: React.FC<CashFlowChartProps> = ({ data, isLoading = 
                   fontSize: "12px",
                   boxShadow: "0 4px 12px rgba(0,0,0,0.1)",
                 }}
-                formatter={(value: any) => [formatCurrency(Number(value || 0)), ""]}
+                formatter={(value: unknown) => [formatCurrency(Number(value || 0)), ""]}
               />
               <Area
                 type="monotone"
