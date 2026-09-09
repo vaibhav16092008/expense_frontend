@@ -1,47 +1,154 @@
-import React from "react";
-import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/Card";
-import { Badge } from "@/components/ui/Badge";
-import { Tags, Clock } from "lucide-react";
+"use client";
+
+import React, { useState } from "react";
+import { Button } from "@/components/ui/Button";
+import { Modal } from "@/components/ui/Modal";
+import { CategoryForm } from "@/features/categories/components/CategoryForm";
+import { CategoryList } from "@/features/categories/components/CategoryList";
+import { DeleteCategoryDialog } from "@/features/categories/components/DeleteCategoryDialog";
+import {
+  useCategories,
+  useCreateCategory,
+  useDeleteCategory,
+  useUpdateCategory,
+} from "@/features/categories/hooks/useCategories";
+import { Category, CategoryType } from "@/features/categories/types";
+import { useToast } from "@/providers/ToastProvider";
+import { FolderPlus } from "lucide-react";
 
 export default function CategoriesPage() {
+  const { toast } = useToast();
+
+  // State
+  const [activeTab, setActiveTab] = useState<CategoryType | "ALL">("ALL");
+  const [isFormModalOpen, setIsFormModalOpen] = useState(false);
+  const [editingCategory, setEditingCategory] = useState<Category | null>(null);
+  const [deletingCategory, setDeletingCategory] = useState<Category | null>(null);
+
+  // Queries & Mutations
+  const { data: categories = [], isLoading } = useCategories(
+    activeTab === "ALL" ? undefined : activeTab
+  );
+  const createCategoryMutation = useCreateCategory();
+  const updateCategoryMutation = useUpdateCategory();
+  const deleteCategoryMutation = useDeleteCategory();
+
+  // Handlers
+  const handleCreateOrUpdate = async (payload: Parameters<typeof createCategoryMutation.mutateAsync>[0]) => {
+    try {
+      if (editingCategory) {
+        await updateCategoryMutation.mutateAsync({ id: editingCategory.id, payload });
+        toast({ type: "success", title: "Category updated successfully" });
+      } else {
+        await createCategoryMutation.mutateAsync(payload);
+        toast({ type: "success", title: "Category created successfully" });
+      }
+      setIsFormModalOpen(false);
+      setEditingCategory(null);
+    } catch (err: unknown) {
+      const description = err instanceof Error ? err.message : "Failed to save category";
+      toast({ type: "error", title: "Error", description });
+    }
+  };
+
+  const handleDeleteConfirm = async () => {
+    if (!deletingCategory) return;
+    try {
+      await deleteCategoryMutation.mutateAsync(deletingCategory.id);
+      toast({ type: "success", title: "Category deleted" });
+      setDeletingCategory(null);
+    } catch (err: unknown) {
+      const description = err instanceof Error ? err.message : "Failed to delete category";
+      toast({ type: "error", title: "Error", description });
+    }
+  };
+
   return (
     <div className="space-y-6">
+      {/* Page Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight text-[var(--text-primary)]">
-            Categories
+          <h1 className="text-2xl font-extrabold tracking-tight text-foreground">
+            Category Management
           </h1>
-          <p className="text-xs text-[var(--text-secondary)] mt-1">
-            Custom category management, color coding, icons, and expense allocation rules.
+          <p className="text-xs text-muted-foreground mt-1">
+            Organize your transactions with custom categories, icons, and colors.
           </p>
         </div>
-        <Badge variant="primary" size="md">
-          Phase F3 Module
-        </Badge>
+
+        <Button
+          onClick={() => {
+            setEditingCategory(null);
+            setIsFormModalOpen(true);
+          }}
+          leftIcon={<FolderPlus className="w-4 h-4" />}
+          size="sm"
+        >
+          Add Category
+        </Button>
       </div>
 
-      <Card>
-        <CardHeader>
-          <div className="flex items-center gap-2 text-[var(--primary)] mb-1">
-            <Tags className="w-5 h-5" />
-            <CardTitle>Categories Module Scaffold</CardTitle>
-          </div>
-          <CardDescription>
-            This module will allow creating custom income and expense categories, assigning subcategories, and configuring budget thresholds.
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="p-6 rounded-[var(--radius-md)] border border-dashed border-[var(--border)] bg-[var(--surface-secondary)]/50 flex flex-col items-center justify-center text-center gap-2 min-h-[180px]">
-            <Clock className="w-8 h-8 text-[var(--text-muted)]" />
-            <p className="text-sm font-semibold text-[var(--text-primary)]">
-              Phase F3 Implementation Ready
-            </p>
-            <p className="text-xs text-[var(--text-muted)] max-w-md">
-              Category CRUD, icon picker, and visual color token selection will be implemented in Phase F3.
-            </p>
-          </div>
-        </CardContent>
-      </Card>
+      {/* Filter Tabs */}
+      <div className="flex items-center gap-2 border-b border-border pb-2">
+        {(["ALL", "EXPENSE", "INCOME"] as const).map((tab) => (
+          <button
+            key={tab}
+            onClick={() => setActiveTab(tab)}
+            className={`px-3 py-1.5 text-xs font-semibold rounded-lg transition-colors ${
+              activeTab === tab
+                ? "bg-primary text-primary-foreground shadow-xs"
+                : "text-muted-foreground hover:text-foreground hover:bg-accent"
+            }`}
+          >
+            {tab === "ALL" ? "All Categories" : tab === "EXPENSE" ? "Expense Categories" : "Income Categories"}
+          </button>
+        ))}
+      </div>
+
+      {/* Category List */}
+      <CategoryList
+        categories={categories}
+        isLoading={isLoading}
+        onEdit={(cat) => {
+          setEditingCategory(cat);
+          setIsFormModalOpen(true);
+        }}
+        onDelete={(cat) => setDeletingCategory(cat)}
+        onCreateNew={() => {
+          setEditingCategory(null);
+          setIsFormModalOpen(true);
+        }}
+      />
+
+      {/* Form Modal */}
+      <Modal
+        isOpen={isFormModalOpen}
+        onClose={() => {
+          setIsFormModalOpen(false);
+          setEditingCategory(null);
+        }}
+        title={editingCategory ? "Edit Category" : "Create Category"}
+        size="md"
+      >
+        <CategoryForm
+          initialData={editingCategory || undefined}
+          onSubmit={handleCreateOrUpdate}
+          onCancel={() => {
+            setIsFormModalOpen(false);
+            setEditingCategory(null);
+          }}
+          isLoading={createCategoryMutation.isPending || updateCategoryMutation.isPending}
+        />
+      </Modal>
+
+      {/* Delete Confirmation Dialog */}
+      <DeleteCategoryDialog
+        category={deletingCategory}
+        isOpen={Boolean(deletingCategory)}
+        onClose={() => setDeletingCategory(null)}
+        onConfirm={handleDeleteConfirm}
+        isLoading={deleteCategoryMutation.isPending}
+      />
     </div>
   );
 }
