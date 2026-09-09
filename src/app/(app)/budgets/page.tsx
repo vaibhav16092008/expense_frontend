@@ -1,47 +1,89 @@
-import React from "react";
-import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/Card";
-import { Badge } from "@/components/ui/Badge";
-import { PieChart, Clock } from "lucide-react";
+"use client";
+
+import React, { useState } from "react";
+import {
+  Budget,
+  BudgetFilters,
+  BudgetSummaryHeader,
+  BudgetList,
+  BudgetFormModal,
+  DeleteBudgetDialog,
+  useBudgets,
+} from "@/features/budgets";
+import { Button } from "@/components/ui/Button";
+import { Plus, PieChart } from "lucide-react";
 
 export default function BudgetsPage() {
+  const [filters, setFilters] = useState<BudgetFilters>({});
+  const [isFormOpen, setIsFormOpen] = useState(false);
+  const [selectedBudget, setSelectedBudget] = useState<Budget | null>(null);
+  const [budgetToDelete, setBudgetToDelete] = useState<Budget | null>(null);
+
+  // Fetch overall list to power summary header (unfiltered summary metrics)
+  const { data: allBudgets = [] } = useBudgets({});
+
+  const handleCreateNew = () => {
+    setSelectedBudget(null);
+    setIsFormOpen(true);
+  };
+
+  const handleEdit = (budget: Budget) => {
+    setSelectedBudget(budget);
+    setIsFormOpen(true);
+  };
+
+  const handleDelete = (budget: Budget) => {
+    setBudgetToDelete(budget);
+  };
+
   return (
     <div className="space-y-6">
+      {/* Top Page Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight text-[var(--text-primary)]">
+          <h1 className="text-2xl font-bold tracking-tight text-[var(--text-primary)] flex items-center gap-2">
+            <PieChart className="w-6 h-6 text-[var(--primary)]" />
             Budgets
           </h1>
           <p className="text-xs text-[var(--text-secondary)] mt-1">
-            Monthly, quarterly, and annual budget planning with progress tracking.
+            Set and monitor spending limits across overall expenses and categories.
           </p>
         </div>
-        <Badge variant="primary" size="md">
-          Phase F3 Module
-        </Badge>
+
+        <Button
+          variant="primary"
+          onClick={handleCreateNew}
+          leftIcon={<Plus className="w-4 h-4" />}
+        >
+          Create Budget
+        </Button>
       </div>
 
-      <Card>
-        <CardHeader>
-          <div className="flex items-center gap-2 text-[var(--primary)] mb-1">
-            <PieChart className="w-5 h-5" />
-            <CardTitle>Budgets Module Scaffold</CardTitle>
-          </div>
-          <CardDescription>
-            This module will feature progress indicators, alert thresholds, rollover settings, and variance calculations.
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="p-6 rounded-[var(--radius-md)] border border-dashed border-[var(--border)] bg-[var(--surface-secondary)]/50 flex flex-col items-center justify-center text-center gap-2 min-h-[180px]">
-            <Clock className="w-8 h-8 text-[var(--text-muted)]" />
-            <p className="text-sm font-semibold text-[var(--text-primary)]">
-              Phase F3 Implementation Ready
-            </p>
-            <p className="text-xs text-[var(--text-muted)] max-w-md">
-              Budget allocation controls, spending alerts, and progress visualizers will be implemented in Phase F3.
-            </p>
-          </div>
-        </CardContent>
-      </Card>
+      {/* Summary Header Metric Cards */}
+      <BudgetSummaryHeader budgets={allBudgets} />
+
+      {/* Main Budget List & Filters */}
+      <BudgetList
+        filters={filters}
+        onFilterChange={setFilters}
+        onEdit={handleEdit}
+        onDelete={handleDelete}
+        onCreateNew={handleCreateNew}
+      />
+
+      {/* Create / Edit Form Modal */}
+      <BudgetFormModal
+        isOpen={isFormOpen}
+        onClose={() => setIsFormOpen(false)}
+        budget={selectedBudget}
+      />
+
+      {/* Delete Confirmation Dialog */}
+      <DeleteBudgetDialog
+        isOpen={Boolean(budgetToDelete)}
+        onClose={() => setBudgetToDelete(null)}
+        budget={budgetToDelete}
+      />
     </div>
   );
 }
