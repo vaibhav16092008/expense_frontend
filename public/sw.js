@@ -1,4 +1,3 @@
-/* eslint-disable no-restricted-globals */
 // ExpenseIQ Production-Grade Service Worker
 // Cache strategy: Safe App-Shell & Static Assets ONLY.
 // Sensitive financial data and API responses are strictly excluded.
