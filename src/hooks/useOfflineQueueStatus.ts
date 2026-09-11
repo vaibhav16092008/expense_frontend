@@ -2,7 +2,12 @@
 
 import { useEffect, useState, useCallback } from "react";
 import { useAuth } from "@/providers/AuthProvider";
-import { transactionQueueStore, QueuedTransaction } from "@/lib/offline";
+import {
+  transactionQueueStore,
+  QueuedTransaction,
+  subscribeBroadcastChannel,
+  publishBroadcastEvent,
+} from "@/lib/offline";
 
 export interface OfflineQueueStatus {
   pendingCount: number;
@@ -54,7 +59,7 @@ export function useOfflineQueueStatus(): OfflineQueueStatus {
       refetchQueue();
     });
 
-    // Listen to window events triggered by queue changes
+    // Listen to local window events triggered by queue changes
     const handleQueueChange = () => {
       void Promise.resolve().then(() => {
         refetchQueue();
@@ -65,10 +70,20 @@ export function useOfflineQueueStatus(): OfflineQueueStatus {
     window.addEventListener("online", handleQueueChange);
     window.addEventListener("offline", handleQueueChange);
 
+    // Subscribe to cross-tab BroadcastChannel events (No re-broadcast loop)
+    const unsubscribeBroadcast = subscribeBroadcastChannel((msg) => {
+      if (msg.type === "QUEUE_CHANGED" || msg.type === "SYNC_COMPLETED") {
+        void Promise.resolve().then(() => {
+          refetchQueue();
+        });
+      }
+    });
+
     return () => {
       window.removeEventListener("expenseiq:queue_changed", handleQueueChange);
       window.removeEventListener("online", handleQueueChange);
       window.removeEventListener("offline", handleQueueChange);
+      unsubscribeBroadcast();
     };
   }, [userId, refetchQueue]);
 
@@ -92,10 +107,15 @@ export function useOfflineQueueStatus(): OfflineQueueStatus {
 }
 
 /**
- * Global helper event dispatcher to notify UI when queue state changes
+ * Global helper event dispatcher to notify UI when queue state changes.
+ * Dispatches local window event and broadcasts across open tabs safely.
  */
-export function notifyQueueChanged(): void {
+export function notifyQueueChanged(broadcast: boolean = true): void {
   if (typeof window !== "undefined" && typeof window.dispatchEvent === "function" && typeof Event !== "undefined") {
     window.dispatchEvent(new Event("expenseiq:queue_changed"));
+  }
+
+  if (broadcast) {
+    publishBroadcastEvent({ type: "QUEUE_CHANGED" });
   }
 }

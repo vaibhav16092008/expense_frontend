@@ -1,10 +1,10 @@
-// ExpenseIQ Production-Grade Service Worker
-// Cache strategy: Safe App-Shell & Static Assets ONLY.
-// Sensitive financial data and API responses are strictly excluded.
+// ExpenseIQ Production-Grade Service Worker (F8.7 Cache Safety)
+// Cache strategy: Static Assets & App-Shell ONLY.
+// Sensitive financial data, API responses, and authenticated routes are strictly network-only.
 
-const CACHE_NAME = 'expenseiq-static-v1';
+const STATIC_CACHE_NAME = 'expenseiq-static-v1';
 
-// App shell assets to precache on install
+// Static app-shell resources to precache during SW installation
 const PRECACHE_ASSETS = [
   '/',
   '/manifest.json',
@@ -14,35 +14,51 @@ const PRECACHE_ASSETS = [
   '/icons/icon.svg',
 ];
 
-// Determine if a request should bypass cache completely (Network-Only)
+/**
+ * Strict request classifier to determine if a request MUST bypass Cache Storage.
+ * Guarantees zero caching of authenticated financial API data.
+ */
 function isBypassedRequest(request) {
-  // Non-GET requests (POST, PUT, DELETE, PATCH) must never be cached
+  // 1. Non-GET methods (POST, PUT, DELETE, PATCH) must never be cached
   if (request.method !== 'GET') {
+    return true;
+  }
+
+  // 2. Any request bearing an Authorization header is network-only
+  if (request.headers.has('Authorization')) {
+    return true;
+  }
+
+  // 3. Any request asking for or returning JSON API responses is network-only
+  const acceptHeader = request.headers.get('accept') || '';
+  if (acceptHeader.includes('application/json')) {
     return true;
   }
 
   const url = new URL(request.url);
 
-  // Exclude API requests (local or backend port 4000 or paths containing /api/)
+  // 4. Exclude API endpoints & backend origin (port 4000, port 5000, or /api/* paths)
   if (
     url.pathname.startsWith('/api/') ||
     url.port === '4000' ||
+    url.port === '5000' ||
     url.hostname.includes('api.')
   ) {
     return true;
   }
 
-  // Exclude authorization / session endpoints
+  // 5. Exclude explicit financial feature routes
   if (
     url.pathname.includes('/auth/') ||
-    request.headers.has('Authorization')
+    url.pathname.includes('/transactions') ||
+    url.pathname.includes('/categories') ||
+    url.pathname.includes('/budgets') ||
+    url.pathname.includes('/goals') ||
+    url.pathname.includes('/recurring') ||
+    url.pathname.includes('/dashboard') ||
+    url.pathname.includes('/notifications') ||
+    url.pathname.includes('/profile')
   ) {
-    return true;
-  }
-
-  // Exclude Next.js data calls or JSON API responses for financial routes
-  const acceptHeader = request.headers.get('accept') || '';
-  if (acceptHeader.includes('application/json')) {
     return true;
   }
 
@@ -53,16 +69,15 @@ function isBypassedRequest(request) {
 self.addEventListener('install', (event) => {
   self.skipWaiting();
   event.waitUntil(
-    caches.open(CACHE_NAME).then((cache) => {
+    caches.open(STATIC_CACHE_NAME).then((cache) => {
       return cache.addAll(PRECACHE_ASSETS).catch((err) => {
-        // Log precache failure gracefully without breaking SW installation
-        console.warn('[ExpenseIQ SW] Precache partial error:', err);
+        console.warn('[ExpenseIQ SW] Precache partial fallback:', err);
       });
     })
   );
 });
 
-// Service Worker Activation & Old Cache Cleanup
+// Service Worker Activation & Cache Storage Cleanup
 self.addEventListener('activate', (event) => {
   event.waitUntil(
     caches
@@ -70,7 +85,7 @@ self.addEventListener('activate', (event) => {
       .then((cacheNames) => {
         return Promise.all(
           cacheNames
-            .filter((name) => name !== CACHE_NAME)
+            .filter((name) => name.startsWith('expenseiq-') && name !== STATIC_CACHE_NAME)
             .map((name) => caches.delete(name))
         );
       })
@@ -78,18 +93,18 @@ self.addEventListener('activate', (event) => {
   );
 });
 
-// Fetch Handler
+// Fetch Interception Handler
 self.addEventListener('fetch', (event) => {
   const { request } = event;
 
-  // Bypass cache completely for API, auth, non-GET, or financial requests
+  // Bypass cache completely for all API, auth, non-GET, or financial requests
   if (isBypassedRequest(request)) {
     return;
   }
 
   const url = new URL(request.url);
 
-  // Strategy 1: Cache-First for static build assets (Next.js _next/static, icons, images, fonts)
+  // Strategy 1: Cache-First for static build assets (_next/static, icons, images, fonts)
   if (
     url.pathname.startsWith('/_next/static/') ||
     url.pathname.startsWith('/icons/') ||
@@ -107,7 +122,7 @@ self.addEventListener('fetch', (event) => {
         return fetch(request).then((networkResponse) => {
           if (networkResponse && networkResponse.status === 200 && networkResponse.type === 'basic') {
             const responseToCache = networkResponse.clone();
-            caches.open(CACHE_NAME).then((cache) => cache.put(request, responseToCache));
+            caches.open(STATIC_CACHE_NAME).then((cache) => cache.put(request, responseToCache));
           }
           return networkResponse;
         });
@@ -116,14 +131,14 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
-  // Strategy 2: Network-First with Cache Fallback for HTML Page Navigations
+  // Strategy 2: Network-First with Safe App-Shell Fallback for HTML Page Navigations
   if (request.mode === 'navigate') {
     event.respondWith(
       fetch(request)
         .then((networkResponse) => {
           if (networkResponse && networkResponse.status === 200) {
             const responseToCache = networkResponse.clone();
-            caches.open(CACHE_NAME).then((cache) => cache.put(request, responseToCache));
+            caches.open(STATIC_CACHE_NAME).then((cache) => cache.put(request, responseToCache));
           }
           return networkResponse;
         })
@@ -132,7 +147,6 @@ self.addEventListener('fetch', (event) => {
           if (cachedResponse) {
             return cachedResponse;
           }
-          // Fallback to app shell root
           return caches.match('/');
         })
     );

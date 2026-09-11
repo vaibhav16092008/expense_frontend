@@ -8,3 +8,4 @@ export * from "./transactionQueueStore";
 export * from "./syncLock";
 export * from "./syncEngine";
 export * from "./useSyncEngine";
+export * from "./broadcastChannel";

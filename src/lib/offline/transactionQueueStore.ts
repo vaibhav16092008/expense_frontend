@@ -89,7 +89,7 @@ export class TransactionQueueStore {
       const request = index.getAll('PENDING');
       const items = (await promisifyRequest(request)) as QueuedTransaction[];
 
-      const filtered = userId ? items.filter((item) => item.userId === userId) : items;
+      const filtered = userId !== undefined ? items.filter((item) => item.userId === userId) : items;
       return filtered.sort((a, b) => a.createdAt - b.createdAt);
     });
   }
@@ -104,7 +104,7 @@ export class TransactionQueueStore {
       const request = store.getAll();
       const items = (await promisifyRequest(request)) as QueuedTransaction[];
 
-      const filtered = userId ? items.filter((item) => item.userId === userId) : items;
+      const filtered = userId !== undefined ? items.filter((item) => item.userId === userId) : items;
       return filtered.sort((a, b) => a.createdAt - b.createdAt);
     });
   }
