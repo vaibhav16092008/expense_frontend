@@ -40,7 +40,7 @@ Configuration is handled via environment variables. Refer to `.env.example` for 
 
 ```env
 # Backend REST API base URL (must point to /api endpoint)
-NEXT_PUBLIC_API_URL=http://localhost:4000/api
+NEXT_PUBLIC_API_URL=http://localhost:5000/api
 
 # Optional: Allow unauthenticated demo mode (default: false)
 NEXT_PUBLIC_ALLOW_UNAUTH=false
