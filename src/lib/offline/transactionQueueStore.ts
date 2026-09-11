@@ -206,6 +206,37 @@ export class TransactionQueueStore {
   }
 
   /**
+   * Reset stale SYNCING items back to PENDING if tab crashed midway
+   */
+  public async resetStaleSyncingTransactions(staleTimeoutMs = 120000): Promise<number> {
+    if (!isIndexedDBSupported()) return 0;
+
+    return withStore(TRANSACTION_QUEUE_STORE, 'readwrite', async (store) => {
+      const index = store.index('by_status');
+      const request = index.getAll('SYNCING');
+      const items = (await promisifyRequest(request)) as QueuedTransaction[];
+
+      const now = Date.now();
+      let resetCount = 0;
+
+      for (const item of items) {
+        const lastActivity = item.lastAttemptedAt || item.updatedAt || item.createdAt;
+        if (now - lastActivity > staleTimeoutMs) {
+          const updated: QueuedTransaction = {
+            ...item,
+            status: 'PENDING',
+            updatedAt: now,
+          };
+          store.put(updated);
+          resetCount++;
+        }
+      }
+
+      return resetCount;
+    });
+  }
+
+  /**
    * Clear entire transaction queue store
    */
   public async clearAllQueue(): Promise<void> {

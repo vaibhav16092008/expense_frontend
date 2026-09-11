@@ -1,8 +1,10 @@
 /**
- * ExpenseIQ Offline Storage Module
- * Centralized IndexedDB database & offline transaction queue exports.
+ * ExpenseIQ Offline Storage & Sync Engine Exports
  */
 
-export * from './types';
-export * from './db';
-export * from './transactionQueueStore';
+export * from "./types";
+export * from "./db";
+export * from "./transactionQueueStore";
+export * from "./syncLock";
+export * from "./syncEngine";
+export * from "./useSyncEngine";
