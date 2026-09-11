@@ -1,0 +1,21 @@
+# https://www.robotstxt.org/robotstxt.html
+# Disallow search crawlers from indexing private authenticated financial SaaS routes
+
+User-agent: *
+Disallow: /dashboard
+Disallow: /transactions
+Disallow: /categories
+Disallow: /budgets
+Disallow: /goals
+Disallow: /recurring
+Disallow: /reports
+Disallow: /notifications
+Disallow: /profile
+Disallow: /settings
+Disallow: /api/
+
+Allow: /
+Allow: /login
+Allow: /register
+Allow: /forgot-password
+Allow: /reset-password
