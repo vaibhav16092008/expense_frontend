@@ -40,8 +40,16 @@ export default function DashboardPage() {
 
   const handleCreateTransaction = async (payload: Parameters<typeof createTxMutation.mutateAsync>[0]) => {
     try {
-      await createTxMutation.mutateAsync(payload);
-      toast({ type: "success", title: "Transaction added successfully" });
+      const result = await createTxMutation.mutateAsync(payload);
+      if (result.isOffline) {
+        toast({
+          type: "info",
+          title: "Saved Offline",
+          description: "The transaction was saved on this device and will sync when you're back online.",
+        });
+      } else {
+        toast({ type: "success", title: "Transaction added successfully" });
+      }
       setIsAddModalOpen(false);
     } catch (err: unknown) {
       const description = err instanceof Error ? err.message : "Failed to create transaction";

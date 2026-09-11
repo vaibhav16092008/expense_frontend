@@ -12,6 +12,8 @@ export interface Transaction {
   date: string;
   note?: string;
   merchant?: string;
+  clientRequestId?: string;
+  isPendingSync?: boolean;
   createdAt?: string;
   updatedAt?: string;
 }
@@ -43,6 +45,8 @@ export interface CreateTransactionPayload {
   date: string;
   note?: string;
   merchant?: string;
+  clientRequestId?: string;
+  [key: string]: unknown;
 }
 
 export interface UpdateTransactionPayload {
@@ -53,3 +57,4 @@ export interface UpdateTransactionPayload {
   note?: string;
   merchant?: string;
 }
+

@@ -7,7 +7,8 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
-    "test:idb": "npx tsx scripts/test-idb.ts"
+    "test:idb": "npx tsx scripts/test-idb.ts",
+    "test:offline-create": "npx tsx scripts/test-offline-creation.ts"
   },
   "dependencies": {
     "@tanstack/react-query": "^5.102.8",

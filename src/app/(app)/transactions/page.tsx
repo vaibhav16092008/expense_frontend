@@ -55,8 +55,16 @@ export default function TransactionsPage() {
         await updateTxMutation.mutateAsync({ id: editingTx.id, payload });
         toast({ type: "success", title: "Transaction updated" });
       } else {
-        await createTxMutation.mutateAsync(payload);
-        toast({ type: "success", title: "Transaction created" });
+        const result = await createTxMutation.mutateAsync(payload);
+        if (result.isOffline) {
+          toast({
+            type: "info",
+            title: "Saved Offline",
+            description: "The transaction was saved on this device and will sync when you're back online.",
+          });
+        } else {
+          toast({ type: "success", title: "Transaction created" });
+        }
       }
       setIsFormModalOpen(false);
       setEditingTx(null);
