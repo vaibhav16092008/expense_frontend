@@ -11,6 +11,7 @@ import { TransactionDetails } from "@/features/transactions/components/Transacti
 import { TransactionFilters } from "@/features/transactions/components/TransactionFilters";
 import { TransactionForm } from "@/features/transactions/components/TransactionForm";
 import { TransactionList } from "@/features/transactions/components/TransactionList";
+import { OfflineTransactionsList } from "@/components/offline/OfflineTransactionsList";
 import {
   useCreateTransaction,
   useDeleteTransaction,
@@ -153,6 +154,9 @@ export default function TransactionsPage() {
 
       {/* Transactions list & pagination */}
       <div className="space-y-4">
+        {/* Offline local queue items section */}
+        <OfflineTransactionsList categories={categories} />
+
         <TransactionList
           transactions={txResponse?.data || []}
           isLoading={isTxLoading}

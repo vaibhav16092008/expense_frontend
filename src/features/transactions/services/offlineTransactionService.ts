@@ -5,6 +5,7 @@
 
 import { normalizeApiError } from "@/lib/api/errors";
 import { transactionQueueStore, QueuedTransactionPayload } from "@/lib/offline";
+import { notifyQueueChanged } from "@/hooks/useOfflineQueueStatus";
 import { createTransaction } from "../api";
 import { CreateTransactionPayload, Transaction } from "../types";
 
@@ -57,6 +58,8 @@ export async function createTransactionOfflineAware(
       retryCount: 0,
     });
 
+    notifyQueueChanged();
+
     const pendingTransaction: Transaction = {
       id: clientRequestId,
       amount: payload.amount,
@@ -98,6 +101,8 @@ export async function createTransactionOfflineAware(
         status: "PENDING",
         retryCount: 0,
       });
+
+      notifyQueueChanged();
 
       const pendingTransaction: Transaction = {
         id: clientRequestId,

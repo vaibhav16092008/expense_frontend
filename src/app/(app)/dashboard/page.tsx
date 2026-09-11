@@ -19,11 +19,14 @@ import {
 import { useCategories } from "@/features/categories/hooks/useCategories";
 import { TransactionForm } from "@/features/transactions/components/TransactionForm";
 import { useCreateTransaction, useTransactions } from "@/features/transactions/hooks/useTransactions";
+import { useOfflineQueueStatus } from "@/hooks/useOfflineQueueStatus";
 import { useToast } from "@/providers/ToastProvider";
-import { PlusCircle } from "lucide-react";
+import { PlusCircle, CloudOff } from "lucide-react";
+import Link from "next/link";
 
 export default function DashboardPage() {
   const { toast } = useToast();
+  const { pendingCount } = useOfflineQueueStatus();
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
 
   // Queries
@@ -78,6 +81,21 @@ export default function DashboardPage() {
           Add Transaction
         </Button>
       </div>
+
+      {/* Offline Pending Activity Indicator */}
+      {pendingCount > 0 && (
+        <div className="flex items-center justify-between p-3.5 rounded-[var(--radius-md)] bg-amber-500/10 border border-amber-500/20 text-amber-800 dark:text-amber-300 text-xs font-medium animate-in fade-in duration-150">
+          <div className="flex items-center gap-2">
+            <CloudOff className="w-4 h-4 text-amber-600 dark:text-amber-400 shrink-0" />
+            <span>
+              <strong className="font-semibold">Offline activity:</strong> {pendingCount} transaction{pendingCount > 1 ? "s" : ""} waiting to sync.
+            </span>
+          </div>
+          <Link href="/transactions" className="font-semibold underline hover:text-amber-900 dark:hover:text-amber-100 transition-colors">
+            View pending
+          </Link>
+        </div>
+      )}
 
       {/* Metric Cards */}
       <SummaryCards summary={summary} isLoading={isSummaryLoading} />

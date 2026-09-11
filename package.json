@@ -9,7 +9,8 @@
     "lint": "eslint",
     "test:idb": "npx tsx scripts/test-idb.ts",
     "test:offline-create": "npx tsx scripts/test-offline-creation.ts",
-    "test:sync": "npx tsx scripts/test-sync-engine.ts"
+    "test:sync": "npx tsx scripts/test-sync-engine.ts",
+    "test:ux": "npx tsx scripts/test-offline-ux.ts"
   },
   "dependencies": {
     "@tanstack/react-query": "^5.102.8",
