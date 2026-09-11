@@ -36,7 +36,8 @@ export function useCreateBudget() {
     mutationFn: (payload: CreateBudgetPayload) => createBudget(payload),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: BUDGETS_QUERY_KEY });
-      queryClient.invalidateQueries({ queryKey: ["dashboard"] });
+      queryClient.invalidateQueries({ queryKey: ["dashboard", "budget-overview"] });
+      queryClient.invalidateQueries({ queryKey: ["dashboard", "summary"] });
     },
   });
 }
@@ -48,7 +49,8 @@ export function useUpdateBudget() {
       updateBudget(id, payload),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: BUDGETS_QUERY_KEY });
-      queryClient.invalidateQueries({ queryKey: ["dashboard"] });
+      queryClient.invalidateQueries({ queryKey: ["dashboard", "budget-overview"] });
+      queryClient.invalidateQueries({ queryKey: ["dashboard", "summary"] });
     },
   });
 }
@@ -59,7 +61,8 @@ export function useDeleteBudget() {
     mutationFn: (id: string) => deleteBudget(id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: BUDGETS_QUERY_KEY });
-      queryClient.invalidateQueries({ queryKey: ["dashboard"] });
+      queryClient.invalidateQueries({ queryKey: ["dashboard", "budget-overview"] });
+      queryClient.invalidateQueries({ queryKey: ["dashboard", "summary"] });
     },
   });
 }

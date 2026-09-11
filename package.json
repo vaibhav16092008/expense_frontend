@@ -11,7 +11,8 @@
     "test:offline-create": "npx tsx scripts/test-offline-creation.ts",
     "test:sync": "npx tsx scripts/test-sync-engine.ts",
     "test:ux": "npx tsx scripts/test-offline-ux.ts",
-    "test:f8.7": "npx tsx scripts/test-f8.7.ts"
+    "test:f8.7": "npx tsx scripts/test-f8.7.ts",
+    "test:f8.8": "npx tsx scripts/test-f8.8.ts"
   },
   "dependencies": {
     "@tanstack/react-query": "^5.102.8",

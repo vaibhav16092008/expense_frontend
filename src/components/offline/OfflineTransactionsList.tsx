@@ -10,15 +10,20 @@ interface OfflineTransactionsListProps {
   categories?: Category[];
 }
 
-export function OfflineTransactionsList({ categories = [] }: OfflineTransactionsListProps) {
+export const OfflineTransactionsList = React.memo(function OfflineTransactionsList({
+  categories = [],
+}: OfflineTransactionsListProps) {
   const { queuedItems, totalCount } = useOfflineQueueStatus();
   const [now] = React.useState(() => Date.now());
+
+  const categoryMap = React.useMemo(
+    () => new Map(categories.map((c) => [c.id, c.name])),
+    [categories]
+  );
 
   if (totalCount === 0) {
     return null;
   }
-
-  const categoryMap = new Map(categories.map((c) => [c.id, c.name]));
 
   return (
     <div className="bg-[var(--surface)] border border-amber-500/30 rounded-[var(--radius-lg)] p-4 sm:p-5 space-y-4 shadow-sm animate-in fade-in duration-200">
@@ -127,4 +132,4 @@ export function OfflineTransactionsList({ categories = [] }: OfflineTransactions
       </div>
     </div>
   );
-}
+});

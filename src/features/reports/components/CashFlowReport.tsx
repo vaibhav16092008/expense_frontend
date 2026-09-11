@@ -29,7 +29,21 @@ export interface CashFlowReportProps {
   onRetry?: () => void;
 }
 
-export function CashFlowReport({
+const TOOLTIP_STYLE: React.CSSProperties = {
+  backgroundColor: "var(--surface)",
+  borderColor: "var(--border)",
+  borderRadius: "12px",
+  fontSize: "12px",
+  boxShadow: "0 4px 12px rgba(0,0,0,0.1)",
+};
+const LEGEND_WRAPPER_STYLE: React.CSSProperties = { paddingTop: "10px", fontSize: "12px" };
+const CHART_MARGIN = { top: 10, right: 20, left: 0, bottom: 0 };
+const BAR_RADIUS: [number, number, number, number] = [4, 4, 0, 0];
+const XAXIS_TICK = { fill: "var(--text-muted)", fontSize: 11 };
+const YAXIS_TICK = { fill: "var(--text-muted)", fontSize: 11 };
+const formatYAxis = (val: number | string) => `$${val}`;
+
+export const CashFlowReport = React.memo(function CashFlowReport({
   data,
   groupBy,
   onGroupByChange,
@@ -37,6 +51,16 @@ export function CashFlowReport({
   isError = false,
   onRetry,
 }: CashFlowReportProps) {
+  const items = React.useMemo(() => {
+    if (!data?.data) return [];
+    return data.data.map((item) => ({
+      period: item.period,
+      income: parseFloat(item.income) || 0,
+      expense: parseFloat(item.expense) || 0,
+      net: parseFloat(item.net) || 0,
+    }));
+  }, [data?.data]);
+
   if (isError) {
     return (
       <ErrorState
@@ -60,13 +84,6 @@ export function CashFlowReport({
       </Card>
     );
   }
-
-  const items = data.data.map((item) => ({
-    period: item.period,
-    income: parseFloat(item.income) || 0,
-    expense: parseFloat(item.expense) || 0,
-    net: parseFloat(item.net) || 0,
-  }));
 
   return (
     <Card className="h-full min-h-[380px] flex flex-col">
@@ -119,44 +136,38 @@ export function CashFlowReport({
           />
         ) : (
           <ResponsiveContainer width="100%" height="100%">
-            <BarChart data={items} margin={{ top: 10, right: 20, left: 0, bottom: 0 }}>
+            <BarChart data={items} margin={CHART_MARGIN}>
               <CartesianGrid strokeDasharray="3 3" vertical={false} opacity={0.15} />
               <XAxis
                 dataKey="period"
                 tickLine={false}
                 axisLine={false}
-                tick={{ fill: "var(--text-muted)", fontSize: 11 }}
+                tick={XAXIS_TICK}
               />
               <YAxis
                 tickLine={false}
                 axisLine={false}
-                tick={{ fill: "var(--text-muted)", fontSize: 11 }}
-                tickFormatter={(val) => `$${val}`}
+                tick={YAXIS_TICK}
+                tickFormatter={formatYAxis}
               />
               <Tooltip
-                contentStyle={{
-                  backgroundColor: "var(--surface)",
-                  borderColor: "var(--border)",
-                  borderRadius: "12px",
-                  fontSize: "12px",
-                  boxShadow: "0 4px 12px rgba(0,0,0,0.1)",
-                }}
+                contentStyle={TOOLTIP_STYLE}
                 formatter={(value: unknown) => [formatCurrency(Number(value || 0)), ""]}
               />
               <Legend
-                wrapperStyle={{ paddingTop: "10px", fontSize: "12px" }}
+                wrapperStyle={LEGEND_WRAPPER_STYLE}
               />
               <Bar
                 dataKey="income"
                 name="Income"
                 fill="#10B981"
-                radius={[4, 4, 0, 0]}
+                radius={BAR_RADIUS}
               />
               <Bar
                 dataKey="expense"
                 name="Expense"
                 fill="#EF4444"
-                radius={[4, 4, 0, 0]}
+                radius={BAR_RADIUS}
               />
             </BarChart>
           </ResponsiveContainer>
@@ -164,4 +175,4 @@ export function CashFlowReport({
       </CardContent>
     </Card>
   );
-}
+});

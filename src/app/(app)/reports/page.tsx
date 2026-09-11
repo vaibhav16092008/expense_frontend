@@ -17,12 +17,41 @@ import {
   ReportDateRange,
 } from "@/features/reports/components/ReportDateRange";
 import { ReportSummary } from "@/features/reports/components/ReportSummary";
-import { CashFlowReport } from "@/features/reports/components/CashFlowReport";
-import { CategoryReport } from "@/features/reports/components/CategoryReport";
+import dynamic from "next/dynamic";
+import { Card, CardContent, CardHeader } from "@/components/ui/Card";
+import { Skeleton } from "@/components/ui/Skeleton";
 import { BudgetReport } from "@/features/reports/components/BudgetReport";
-import { SavingsReport } from "@/features/reports/components/SavingsReport";
 import { ReportExportMenu } from "@/features/reports/components/ReportExportMenu";
 import { BarChart3 } from "lucide-react";
+
+function ReportChartFallback() {
+  return (
+    <Card className="h-80">
+      <CardHeader className="flex flex-row items-center justify-between pb-2">
+        <Skeleton className="h-6 w-48" />
+        <Skeleton className="h-8 w-36" />
+      </CardHeader>
+      <CardContent className="h-60 pt-4">
+        <Skeleton className="h-full w-full rounded-[var(--radius-md)]" />
+      </CardContent>
+    </Card>
+  );
+}
+
+const CashFlowReport = dynamic(
+  () => import("@/features/reports/components/CashFlowReport").then((mod) => mod.CashFlowReport),
+  { ssr: false, loading: () => <ReportChartFallback /> }
+);
+
+const CategoryReport = dynamic(
+  () => import("@/features/reports/components/CategoryReport").then((mod) => mod.CategoryReport),
+  { ssr: false, loading: () => <ReportChartFallback /> }
+);
+
+const SavingsReport = dynamic(
+  () => import("@/features/reports/components/SavingsReport").then((mod) => mod.SavingsReport),
+  { ssr: false, loading: () => <ReportChartFallback /> }
+);
 
 function getInitialDateRange(): DateRangeParams {
   const now = new Date();

@@ -12,7 +12,7 @@ import { useToast } from "@/providers/ToastProvider";
 /**
  * Compact header sync status indicator with manual sync trigger
  */
-export function SyncStatus() {
+export const SyncStatus = React.memo(function SyncStatus() {
   const { user } = useAuth();
   const queryClient = useQueryClient();
   const isOnline = useOnlineStatus();
@@ -106,4 +106,4 @@ export function SyncStatus() {
       )}
     </div>
   );
-}
+});

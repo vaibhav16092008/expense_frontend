@@ -60,7 +60,8 @@ export function useCreateGoal() {
     mutationFn: (payload: CreateGoalPayload) => createGoal(payload),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: GOALS_QUERY_KEY });
-      queryClient.invalidateQueries({ queryKey: ["dashboard"] });
+      queryClient.invalidateQueries({ queryKey: ["dashboard", "goals-summary"] });
+      queryClient.invalidateQueries({ queryKey: ["dashboard", "summary"] });
     },
   });
 }
@@ -73,7 +74,8 @@ export function useUpdateGoal() {
     onSuccess: (_, { id }) => {
       queryClient.invalidateQueries({ queryKey: GOALS_QUERY_KEY });
       queryClient.invalidateQueries({ queryKey: [...GOALS_QUERY_KEY, id] });
-      queryClient.invalidateQueries({ queryKey: ["dashboard"] });
+      queryClient.invalidateQueries({ queryKey: ["dashboard", "goals-summary"] });
+      queryClient.invalidateQueries({ queryKey: ["dashboard", "summary"] });
     },
   });
 }
@@ -84,7 +86,8 @@ export function useDeleteGoal() {
     mutationFn: (id: string) => deleteGoal(id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: GOALS_QUERY_KEY });
-      queryClient.invalidateQueries({ queryKey: ["dashboard"] });
+      queryClient.invalidateQueries({ queryKey: ["dashboard", "goals-summary"] });
+      queryClient.invalidateQueries({ queryKey: ["dashboard", "summary"] });
     },
   });
 }
@@ -96,7 +99,8 @@ export function usePauseGoal() {
     onSuccess: (_, id) => {
       queryClient.invalidateQueries({ queryKey: GOALS_QUERY_KEY });
       queryClient.invalidateQueries({ queryKey: [...GOALS_QUERY_KEY, id] });
-      queryClient.invalidateQueries({ queryKey: ["dashboard"] });
+      queryClient.invalidateQueries({ queryKey: ["dashboard", "goals-summary"] });
+      queryClient.invalidateQueries({ queryKey: ["dashboard", "summary"] });
     },
   });
 }
@@ -108,7 +112,8 @@ export function useResumeGoal() {
     onSuccess: (_, id) => {
       queryClient.invalidateQueries({ queryKey: GOALS_QUERY_KEY });
       queryClient.invalidateQueries({ queryKey: [...GOALS_QUERY_KEY, id] });
-      queryClient.invalidateQueries({ queryKey: ["dashboard"] });
+      queryClient.invalidateQueries({ queryKey: ["dashboard", "goals-summary"] });
+      queryClient.invalidateQueries({ queryKey: ["dashboard", "summary"] });
     },
   });
 }
@@ -120,7 +125,8 @@ export function useCompleteGoal() {
     onSuccess: (_, id) => {
       queryClient.invalidateQueries({ queryKey: GOALS_QUERY_KEY });
       queryClient.invalidateQueries({ queryKey: [...GOALS_QUERY_KEY, id] });
-      queryClient.invalidateQueries({ queryKey: ["dashboard"] });
+      queryClient.invalidateQueries({ queryKey: ["dashboard", "goals-summary"] });
+      queryClient.invalidateQueries({ queryKey: ["dashboard", "summary"] });
     },
   });
 }
@@ -139,7 +145,8 @@ export function useAddContribution() {
       queryClient.invalidateQueries({ queryKey: GOALS_QUERY_KEY });
       queryClient.invalidateQueries({ queryKey: [...GOALS_QUERY_KEY, goalId] });
       queryClient.invalidateQueries({ queryKey: [...GOALS_QUERY_KEY, "summary"] });
-      queryClient.invalidateQueries({ queryKey: ["dashboard"] });
+      queryClient.invalidateQueries({ queryKey: ["dashboard", "goals-summary"] });
+      queryClient.invalidateQueries({ queryKey: ["dashboard", "summary"] });
       queryClient.invalidateQueries({
         queryKey: [...GOALS_QUERY_KEY, goalId, "contributions"],
       });
@@ -161,7 +168,8 @@ export function useDeleteContribution() {
       queryClient.invalidateQueries({ queryKey: GOALS_QUERY_KEY });
       queryClient.invalidateQueries({ queryKey: [...GOALS_QUERY_KEY, goalId] });
       queryClient.invalidateQueries({ queryKey: [...GOALS_QUERY_KEY, "summary"] });
-      queryClient.invalidateQueries({ queryKey: ["dashboard"] });
+      queryClient.invalidateQueries({ queryKey: ["dashboard", "goals-summary"] });
+      queryClient.invalidateQueries({ queryKey: ["dashboard", "summary"] });
       queryClient.invalidateQueries({
         queryKey: [...GOALS_QUERY_KEY, goalId, "contributions"],
       });

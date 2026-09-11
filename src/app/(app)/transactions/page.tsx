@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useCallback, useMemo } from "react";
 import { Button } from "@/components/ui/Button";
 import { Modal } from "@/components/ui/Modal";
 import { useCategories } from "@/features/categories/hooks/useCategories";
@@ -108,6 +108,27 @@ export default function TransactionsPage() {
     }
   };
 
+  const handleViewTx = useCallback((tx: Transaction) => {
+    setSelectedTx(tx);
+    setIsDetailModalOpen(true);
+  }, []);
+
+  const handleEditTx = useCallback((tx: Transaction) => {
+    setEditingTx(tx);
+    setIsFormModalOpen(true);
+  }, []);
+
+  const handleDeleteTx = useCallback((tx: Transaction) => {
+    setDeletingTx(tx);
+  }, []);
+
+  const handleCreateNewTx = useCallback(() => {
+    setEditingTx(null);
+    setIsFormModalOpen(true);
+  }, []);
+
+  const transactionsList = useMemo(() => txResponse?.data || [], [txResponse?.data]);
+
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -133,10 +154,7 @@ export default function TransactionsPage() {
           </Button>
           <Button
             size="sm"
-            onClick={() => {
-              setEditingTx(null);
-              setIsFormModalOpen(true);
-            }}
+            onClick={handleCreateNewTx}
             leftIcon={<PlusCircle className="w-4 h-4" />}
           >
             Add Transaction
@@ -158,21 +176,12 @@ export default function TransactionsPage() {
         <OfflineTransactionsList categories={categories} />
 
         <TransactionList
-          transactions={txResponse?.data || []}
+          transactions={transactionsList}
           isLoading={isTxLoading}
-          onView={(tx) => {
-            setSelectedTx(tx);
-            setIsDetailModalOpen(true);
-          }}
-          onEdit={(tx) => {
-            setEditingTx(tx);
-            setIsFormModalOpen(true);
-          }}
-          onDelete={(tx) => setDeletingTx(tx)}
-          onCreateNew={() => {
-            setEditingTx(null);
-            setIsFormModalOpen(true);
-          }}
+          onView={handleViewTx}
+          onEdit={handleEditTx}
+          onDelete={handleDeleteTx}
+          onCreateNew={handleCreateNewTx}
         />
 
         {txResponse?.meta && (

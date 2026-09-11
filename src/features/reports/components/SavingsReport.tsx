@@ -28,7 +28,19 @@ export interface SavingsReportProps {
   onRetry?: () => void;
 }
 
-export function SavingsReport({
+const TOOLTIP_STYLE: React.CSSProperties = {
+  backgroundColor: "var(--surface)",
+  borderColor: "var(--border)",
+  borderRadius: "12px",
+  fontSize: "12px",
+  boxShadow: "0 4px 12px rgba(0,0,0,0.1)",
+};
+const CHART_MARGIN = { top: 10, right: 20, left: 0, bottom: 0 };
+const XAXIS_TICK = { fill: "var(--text-muted)", fontSize: 11 };
+const YAXIS_TICK = { fill: "var(--text-muted)", fontSize: 11 };
+const formatYAxis = (val: number | string) => `$${val}`;
+
+export const SavingsReport = React.memo(function SavingsReport({
   data,
   groupBy,
   onGroupByChange,
@@ -36,6 +48,18 @@ export function SavingsReport({
   isError = false,
   onRetry,
 }: SavingsReportProps) {
+  const chartData = React.useMemo(() => {
+    if (!data?.breakdown) return [];
+    return data.breakdown.map((item) => ({
+      period: item.period,
+      savings: parseFloat(item.savings) || 0,
+    }));
+  }, [data?.breakdown]);
+
+  const numSavings = React.useMemo(() => {
+    return parseFloat(data?.totalSavings || "0") || 0;
+  }, [data?.totalSavings]);
+
   if (isError) {
     return (
       <ErrorState
@@ -59,13 +83,6 @@ export function SavingsReport({
       </Card>
     );
   }
-
-  const chartData = data.breakdown.map((item) => ({
-    period: item.period,
-    savings: parseFloat(item.savings) || 0,
-  }));
-
-  const numSavings = parseFloat(data.totalSavings) || 0;
 
   return (
     <Card className="h-full min-h-[380px] flex flex-col">
@@ -122,7 +139,7 @@ export function SavingsReport({
           />
         ) : (
           <ResponsiveContainer width="100%" height="100%">
-            <AreaChart data={chartData} margin={{ top: 10, right: 20, left: 0, bottom: 0 }}>
+            <AreaChart data={chartData} margin={CHART_MARGIN}>
               <defs>
                 <linearGradient id="savingsGradient" x1="0" y1="0" x2="0" y2="1">
                   <stop offset="5%" stopColor="var(--primary)" stopOpacity={0.4} />
@@ -134,22 +151,16 @@ export function SavingsReport({
                 dataKey="period"
                 tickLine={false}
                 axisLine={false}
-                tick={{ fill: "var(--text-muted)", fontSize: 11 }}
+                tick={XAXIS_TICK}
               />
               <YAxis
                 tickLine={false}
                 axisLine={false}
-                tick={{ fill: "var(--text-muted)", fontSize: 11 }}
-                tickFormatter={(val) => `$${val}`}
+                tick={YAXIS_TICK}
+                tickFormatter={formatYAxis}
               />
               <Tooltip
-                contentStyle={{
-                  backgroundColor: "var(--surface)",
-                  borderColor: "var(--border)",
-                  borderRadius: "12px",
-                  fontSize: "12px",
-                  boxShadow: "0 4px 12px rgba(0,0,0,0.1)",
-                }}
+                contentStyle={TOOLTIP_STYLE}
                 formatter={(value: unknown) => [formatCurrency(Number(value || 0)), "Savings"]}
               />
               <Area
@@ -167,4 +178,4 @@ export function SavingsReport({
       </CardContent>
     </Card>
   );
-}
+});

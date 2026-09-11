@@ -18,12 +18,32 @@ export interface CategoryReportProps {
   onRetry?: () => void;
 }
 
-export function CategoryReport({
+const TOOLTIP_STYLE: React.CSSProperties = {
+  backgroundColor: "var(--surface)",
+  borderColor: "var(--border)",
+  borderRadius: "12px",
+  fontSize: "12px",
+  boxShadow: "0 4px 12px rgba(0,0,0,0.1)",
+};
+
+export const CategoryReport = React.memo(function CategoryReport({
   data,
   isLoading = false,
   isError = false,
   onRetry,
 }: CategoryReportProps) {
+  const items = React.useMemo(() => {
+    if (!data?.data) return [];
+    return data.data.map((item) => ({
+      ...item,
+      numericAmount: parseFloat(item.amount) || 0,
+    }));
+  }, [data?.data]);
+
+  const totalExpenseNum = React.useMemo(() => {
+    return parseFloat(data?.totalExpense || "0") || 0;
+  }, [data?.totalExpense]);
+
   if (isError) {
     return (
       <ErrorState
@@ -47,13 +67,6 @@ export function CategoryReport({
       </Card>
     );
   }
-
-  const items = data.data.map((item) => ({
-    ...item,
-    numericAmount: parseFloat(item.amount) || 0,
-  }));
-
-  const totalExpenseNum = parseFloat(data.totalExpense) || 0;
 
   return (
     <Card className="h-full min-h-[380px] flex flex-col">
@@ -103,13 +116,7 @@ export function CategoryReport({
                     ))}
                   </Pie>
                   <Tooltip
-                    contentStyle={{
-                      backgroundColor: "var(--surface)",
-                      borderColor: "var(--border)",
-                      borderRadius: "12px",
-                      fontSize: "12px",
-                      boxShadow: "0 4px 12px rgba(0,0,0,0.1)",
-                    }}
+                    contentStyle={TOOLTIP_STYLE}
                     formatter={(value: unknown) => [formatCurrency(Number(value || 0)), "Amount"]}
                   />
                 </PieChart>
@@ -142,11 +149,11 @@ export function CategoryReport({
                           </span>
                         </div>
                       </td>
-                      <td className="py-2 text-right font-semibold text-[var(--text-primary)]">
+                      <td className="py-2 text-right font-medium text-[var(--text-primary)]">
                         {formatCurrency(item.numericAmount)}
                       </td>
-                      <td className="py-2 pr-1 text-right text-[var(--text-secondary)] font-medium">
-                        {item.percentage.toFixed(1)}%
+                      <td className="py-2 pr-1 text-right text-[var(--text-muted)]">
+                        {item.percentage}%
                       </td>
                     </tr>
                   ))}
@@ -158,4 +165,4 @@ export function CategoryReport({
       </CardContent>
     </Card>
   );
-}
+});
