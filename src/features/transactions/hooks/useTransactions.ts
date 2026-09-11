@@ -1,11 +1,12 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useAuth } from "@/providers/AuthProvider";
 import {
-  createTransaction,
   deleteTransaction,
   getTransaction,
   getTransactions,
   updateTransaction,
 } from "../api";
+import { createTransactionOfflineAware } from "../services/offlineTransactionService";
 import {
   CreateTransactionPayload,
   TransactionFilters,
@@ -32,11 +33,16 @@ export function useTransaction(id: string) {
 
 export function useCreateTransaction() {
   const queryClient = useQueryClient();
+  const { user } = useAuth();
+
   return useMutation({
-    mutationFn: (payload: CreateTransactionPayload) => createTransaction(payload),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: TRANSACTIONS_QUERY_KEY });
-      queryClient.invalidateQueries({ queryKey: ["dashboard"] });
+    mutationFn: (payload: CreateTransactionPayload) =>
+      createTransactionOfflineAware(payload, user?.id || "anonymous"),
+    onSuccess: (result) => {
+      if (!result.isOffline) {
+        queryClient.invalidateQueries({ queryKey: TRANSACTIONS_QUERY_KEY });
+        queryClient.invalidateQueries({ queryKey: ["dashboard"] });
+      }
     },
   });
 }

@@ -13,10 +13,19 @@ interface CategorySpendingChartProps {
   isLoading?: boolean;
 }
 
-export const CategorySpendingChart: React.FC<CategorySpendingChartProps> = ({
+const TOOLTIP_CONTENT_STYLE: React.CSSProperties = {
+  backgroundColor: "var(--surface)",
+  borderColor: "var(--border)",
+  borderRadius: "12px",
+  fontSize: "12px",
+};
+
+const formatTooltip = (value: unknown) => [formatCurrency(Number(value || 0)), "Amount"] as [string, string];
+
+export const CategorySpendingChart: React.FC<CategorySpendingChartProps> = React.memo(function CategorySpendingChart({
   data,
   isLoading = false,
-}) => {
+}) {
   if (isLoading) {
     return (
       <Card className="h-80">
@@ -65,13 +74,8 @@ export const CategorySpendingChart: React.FC<CategorySpendingChartProps> = ({
                     ))}
                   </Pie>
                   <Tooltip
-                    contentStyle={{
-                      backgroundColor: "var(--surface)",
-                      borderColor: "var(--border)",
-                      borderRadius: "12px",
-                      fontSize: "12px",
-                    }}
-                    formatter={(value: unknown) => [formatCurrency(Number(value || 0)), "Amount"]}
+                    contentStyle={TOOLTIP_CONTENT_STYLE}
+                    formatter={formatTooltip}
                   />
                 </PieChart>
               </ResponsiveContainer>
@@ -106,4 +110,4 @@ export const CategorySpendingChart: React.FC<CategorySpendingChartProps> = ({
       </CardContent>
     </Card>
   );
-};
+});

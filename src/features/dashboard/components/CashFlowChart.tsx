@@ -20,7 +20,25 @@ interface CashFlowChartProps {
   isLoading?: boolean;
 }
 
-export const CashFlowChart: React.FC<CashFlowChartProps> = ({ data, isLoading = false }) => {
+const TOOLTIP_CONTENT_STYLE: React.CSSProperties = {
+  backgroundColor: "var(--surface)",
+  borderColor: "var(--border)",
+  borderRadius: "12px",
+  fontSize: "12px",
+  boxShadow: "0 4px 12px rgba(0,0,0,0.1)",
+};
+
+const CHART_MARGIN = { top: 10, right: 20, left: -10, bottom: 0 };
+const X_AXIS_TICK = { fill: "var(--text-muted)", fontSize: 11 };
+const Y_AXIS_TICK = { fill: "var(--text-muted)", fontSize: 11 };
+
+const formatYAxis = (val: unknown) => `$${val}`;
+const formatTooltip = (value: unknown) => [formatCurrency(Number(value || 0)), ""] as [string, string];
+
+export const CashFlowChart: React.FC<CashFlowChartProps> = React.memo(function CashFlowChart({
+  data,
+  isLoading = false,
+}) {
   if (isLoading) {
     return (
       <Card className="h-80">
@@ -60,7 +78,7 @@ export const CashFlowChart: React.FC<CashFlowChartProps> = ({ data, isLoading = 
           </div>
         ) : (
           <ResponsiveContainer width="100%" height="100%">
-            <AreaChart data={data} margin={{ top: 10, right: 20, left: -10, bottom: 0 }}>
+            <AreaChart data={data} margin={CHART_MARGIN}>
               <defs>
                 <linearGradient id="incomeGradient" x1="0" y1="0" x2="0" y2="1">
                   <stop offset="5%" stopColor="#10B981" stopOpacity={0.4} />
@@ -76,23 +94,17 @@ export const CashFlowChart: React.FC<CashFlowChartProps> = ({ data, isLoading = 
                 dataKey="month"
                 tickLine={false}
                 axisLine={false}
-                tick={{ fill: "var(--text-muted)", fontSize: 11 }}
+                tick={X_AXIS_TICK}
               />
               <YAxis
                 tickLine={false}
                 axisLine={false}
-                tick={{ fill: "var(--text-muted)", fontSize: 11 }}
-                tickFormatter={(val) => `$${val}`}
+                tick={Y_AXIS_TICK}
+                tickFormatter={formatYAxis}
               />
               <Tooltip
-                contentStyle={{
-                  backgroundColor: "var(--surface)",
-                  borderColor: "var(--border)",
-                  borderRadius: "12px",
-                  fontSize: "12px",
-                  boxShadow: "0 4px 12px rgba(0,0,0,0.1)",
-                }}
-                formatter={(value: unknown) => [formatCurrency(Number(value || 0)), ""]}
+                contentStyle={TOOLTIP_CONTENT_STYLE}
+                formatter={formatTooltip}
               />
               <Area
                 type="monotone"
@@ -118,4 +130,4 @@ export const CashFlowChart: React.FC<CashFlowChartProps> = ({ data, isLoading = 
       </CardContent>
     </Card>
   );
-};
+});

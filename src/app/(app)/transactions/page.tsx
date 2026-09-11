@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useCallback, useMemo } from "react";
 import { Button } from "@/components/ui/Button";
 import { Modal } from "@/components/ui/Modal";
 import { useCategories } from "@/features/categories/hooks/useCategories";
@@ -11,6 +11,7 @@ import { TransactionDetails } from "@/features/transactions/components/Transacti
 import { TransactionFilters } from "@/features/transactions/components/TransactionFilters";
 import { TransactionForm } from "@/features/transactions/components/TransactionForm";
 import { TransactionList } from "@/features/transactions/components/TransactionList";
+import { OfflineTransactionsList } from "@/components/offline/OfflineTransactionsList";
 import {
   useCreateTransaction,
   useDeleteTransaction,
@@ -55,8 +56,16 @@ export default function TransactionsPage() {
         await updateTxMutation.mutateAsync({ id: editingTx.id, payload });
         toast({ type: "success", title: "Transaction updated" });
       } else {
-        await createTxMutation.mutateAsync(payload);
-        toast({ type: "success", title: "Transaction created" });
+        const result = await createTxMutation.mutateAsync(payload);
+        if (result.isOffline) {
+          toast({
+            type: "info",
+            title: "Saved Offline",
+            description: "The transaction was saved on this device and will sync when you're back online.",
+          });
+        } else {
+          toast({ type: "success", title: "Transaction created" });
+        }
       }
       setIsFormModalOpen(false);
       setEditingTx(null);
@@ -99,6 +108,27 @@ export default function TransactionsPage() {
     }
   };
 
+  const handleViewTx = useCallback((tx: Transaction) => {
+    setSelectedTx(tx);
+    setIsDetailModalOpen(true);
+  }, []);
+
+  const handleEditTx = useCallback((tx: Transaction) => {
+    setEditingTx(tx);
+    setIsFormModalOpen(true);
+  }, []);
+
+  const handleDeleteTx = useCallback((tx: Transaction) => {
+    setDeletingTx(tx);
+  }, []);
+
+  const handleCreateNewTx = useCallback(() => {
+    setEditingTx(null);
+    setIsFormModalOpen(true);
+  }, []);
+
+  const transactionsList = useMemo(() => txResponse?.data || [], [txResponse?.data]);
+
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -124,10 +154,7 @@ export default function TransactionsPage() {
           </Button>
           <Button
             size="sm"
-            onClick={() => {
-              setEditingTx(null);
-              setIsFormModalOpen(true);
-            }}
+            onClick={handleCreateNewTx}
             leftIcon={<PlusCircle className="w-4 h-4" />}
           >
             Add Transaction
@@ -145,22 +172,16 @@ export default function TransactionsPage() {
 
       {/* Transactions list & pagination */}
       <div className="space-y-4">
+        {/* Offline local queue items section */}
+        <OfflineTransactionsList categories={categories} />
+
         <TransactionList
-          transactions={txResponse?.data || []}
+          transactions={transactionsList}
           isLoading={isTxLoading}
-          onView={(tx) => {
-            setSelectedTx(tx);
-            setIsDetailModalOpen(true);
-          }}
-          onEdit={(tx) => {
-            setEditingTx(tx);
-            setIsFormModalOpen(true);
-          }}
-          onDelete={(tx) => setDeletingTx(tx)}
-          onCreateNew={() => {
-            setEditingTx(null);
-            setIsFormModalOpen(true);
-          }}
+          onView={handleViewTx}
+          onEdit={handleEditTx}
+          onDelete={handleDeleteTx}
+          onCreateNew={handleCreateNewTx}
         />
 
         {txResponse?.meta && (

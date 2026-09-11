@@ -1,14 +1,47 @@
 "use client";
 
 import React, { useState } from "react";
+import dynamic from "next/dynamic";
 import { Button } from "@/components/ui/Button";
+import { Card, CardContent, CardHeader } from "@/components/ui/Card";
+import { Skeleton } from "@/components/ui/Skeleton";
 import { Modal } from "@/components/ui/Modal";
 import { BudgetOverviewCard } from "@/features/dashboard/components/BudgetOverviewCard";
-import { CashFlowChart } from "@/features/dashboard/components/CashFlowChart";
-import { CategorySpendingChart } from "@/features/dashboard/components/CategorySpendingChart";
 import { GoalsSummaryCard } from "@/features/dashboard/components/GoalsSummaryCard";
 import { RecentTransactions } from "@/features/dashboard/components/RecentTransactions";
 import { SummaryCards } from "@/features/dashboard/components/SummaryCards";
+
+function ChartCardFallback() {
+  return (
+    <Card className="h-80">
+      <CardHeader>
+        <Skeleton className="h-6 w-40" />
+      </CardHeader>
+      <CardContent className="h-60">
+        <Skeleton className="h-full w-full rounded-xl" />
+      </CardContent>
+    </Card>
+  );
+}
+
+const CashFlowChart = dynamic(
+  () => import("@/features/dashboard/components/CashFlowChart").then((m) => m.CashFlowChart),
+  {
+    ssr: false,
+    loading: () => <ChartCardFallback />,
+  }
+);
+
+const CategorySpendingChart = dynamic(
+  () =>
+    import("@/features/dashboard/components/CategorySpendingChart").then(
+      (m) => m.CategorySpendingChart
+    ),
+  {
+    ssr: false,
+    loading: () => <ChartCardFallback />,
+  }
+);
 import {
   useBudgetOverview,
   useCategorySpending,
@@ -19,11 +52,14 @@ import {
 import { useCategories } from "@/features/categories/hooks/useCategories";
 import { TransactionForm } from "@/features/transactions/components/TransactionForm";
 import { useCreateTransaction, useTransactions } from "@/features/transactions/hooks/useTransactions";
+import { useOfflineQueueStatus } from "@/hooks/useOfflineQueueStatus";
 import { useToast } from "@/providers/ToastProvider";
-import { PlusCircle } from "lucide-react";
+import { PlusCircle, CloudOff } from "lucide-react";
+import Link from "next/link";
 
 export default function DashboardPage() {
   const { toast } = useToast();
+  const { pendingCount } = useOfflineQueueStatus();
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
 
   // Queries
@@ -40,8 +76,16 @@ export default function DashboardPage() {
 
   const handleCreateTransaction = async (payload: Parameters<typeof createTxMutation.mutateAsync>[0]) => {
     try {
-      await createTxMutation.mutateAsync(payload);
-      toast({ type: "success", title: "Transaction added successfully" });
+      const result = await createTxMutation.mutateAsync(payload);
+      if (result.isOffline) {
+        toast({
+          type: "info",
+          title: "Saved Offline",
+          description: "The transaction was saved on this device and will sync when you're back online.",
+        });
+      } else {
+        toast({ type: "success", title: "Transaction added successfully" });
+      }
       setIsAddModalOpen(false);
     } catch (err: unknown) {
       const description = err instanceof Error ? err.message : "Failed to create transaction";
@@ -70,6 +114,21 @@ export default function DashboardPage() {
           Add Transaction
         </Button>
       </div>
+
+      {/* Offline Pending Activity Indicator */}
+      {pendingCount > 0 && (
+        <div className="flex items-center justify-between p-3.5 rounded-[var(--radius-md)] bg-amber-500/10 border border-amber-500/20 text-amber-800 dark:text-amber-300 text-xs font-medium animate-in fade-in duration-150">
+          <div className="flex items-center gap-2">
+            <CloudOff className="w-4 h-4 text-amber-600 dark:text-amber-400 shrink-0" />
+            <span>
+              <strong className="font-semibold">Offline activity:</strong> {pendingCount} transaction{pendingCount > 1 ? "s" : ""} waiting to sync.
+            </span>
+          </div>
+          <Link href="/transactions" className="font-semibold underline hover:text-amber-900 dark:hover:text-amber-100 transition-colors">
+            View pending
+          </Link>
+        </div>
+      )}
 
       {/* Metric Cards */}
       <SummaryCards summary={summary} isLoading={isSummaryLoading} />

@@ -17,7 +17,7 @@ export interface BudgetReportProps {
   onRetry?: () => void;
 }
 
-export function BudgetReport({
+export const BudgetReport = React.memo(function BudgetReport({
   data,
   isLoading = false,
   isError = false,
@@ -177,4 +177,4 @@ export function BudgetReport({
       </CardContent>
     </Card>
   );
-}
+});

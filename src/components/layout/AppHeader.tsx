@@ -6,6 +6,7 @@ import Link from "next/link";
 import { Bell } from "lucide-react";
 import { UserMenu } from "./UserMenu";
 import { useUnreadCount } from "@/features/notifications/hooks/useNotifications";
+import { SyncStatus } from "@/components/offline/SyncStatus";
 
 const routeTitles: Record<string, string> = {
   "/dashboard": "Dashboard",
@@ -34,6 +35,10 @@ export function AppHeader() {
       </div>
 
       <div className="flex items-center gap-3">
+        <SyncStatus />
+
+        <div className="w-px h-5 bg-[var(--border-subtle)]" />
+
         <Link
           href="/notifications"
           className="p-2 text-[var(--text-muted)] hover:text-[var(--text-primary)] hover:bg-[var(--surface-secondary)] rounded-[var(--radius-md)] transition-colors relative flex items-center justify-center"

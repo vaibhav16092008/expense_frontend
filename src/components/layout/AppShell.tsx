@@ -21,6 +21,8 @@ import {
   TrendingUp,
 } from "lucide-react";
 
+import { NetworkStatusBanner } from "@/components/offline/NetworkStatusBanner";
+
 export interface AppShellProps {
   children: React.ReactNode;
 }
@@ -53,6 +55,9 @@ export function AppShell({ children }: AppShellProps) {
 
         {/* Desktop Header Bar */}
         <AppHeader />
+
+        {/* Global Network Status Banner when offline */}
+        <NetworkStatusBanner />
 
         {/* Main Content Slot */}
         <main className="flex-1 p-4 sm:p-6 lg:p-8 max-w-7xl w-full mx-auto animate-in fade-in duration-150">

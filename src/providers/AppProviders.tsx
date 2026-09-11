@@ -5,15 +5,22 @@ import { ThemeProvider } from "./ThemeProvider";
 import { QueryProvider } from "./QueryProvider";
 import { AuthProvider } from "./AuthProvider";
 import { ToastProvider } from "./ToastProvider";
+import { ServiceWorkerRegister } from "@/components/ServiceWorkerRegister";
+import { SyncEngineInitializer } from "@/components/SyncEngineInitializer";
 
 export function AppProviders({ children }: { children: React.ReactNode }) {
   return (
     <ThemeProvider>
       <QueryProvider>
         <AuthProvider>
-          <ToastProvider>{children}</ToastProvider>
+          <SyncEngineInitializer />
+          <ToastProvider>
+            <ServiceWorkerRegister />
+            {children}
+          </ToastProvider>
         </AuthProvider>
       </QueryProvider>
     </ThemeProvider>
   );
 }
+
