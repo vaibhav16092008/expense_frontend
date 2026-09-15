@@ -92,14 +92,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const register = async (payload: RegisterPayload) => {
     try {
       setIsLoading(true);
-      const response = await apiClient.post("/auth/register", payload);
-      const { user: userData, accessToken } = response.data;
+      await apiClient.post("/auth/register", {
+        name: payload.fullName,
+        fullName: payload.fullName,
+        email: payload.email,
+        password: payload.password,
+      });
 
-      if (accessToken) {
-        localStorage.setItem("expenseiq_access_token", accessToken);
+      // Auto-login after successful registration
+      if (payload.password) {
+        await login({ email: payload.email, password: payload.password });
       }
-
-      setUser(userData || { id: "demo-user", email: payload.email, fullName: payload.fullName });
     } catch (err) {
       throw normalizeApiError(err);
     } finally {

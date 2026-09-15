@@ -1,7 +1,7 @@
 import axios, { AxiosError, InternalAxiosRequestConfig } from "axios";
 import { normalizeApiError } from "./errors";
 
-const baseURL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000/api";
+const baseURL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api";
 
 export const apiClient = axios.create({
   baseURL,
