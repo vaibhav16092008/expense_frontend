@@ -67,7 +67,6 @@ function isBypassedRequestMock(req: {
   const url = new URL(req.url);
   if (
     url.pathname.startsWith("/api/") ||
-    url.port === "4000" ||
     url.port === "5000" ||
     url.hostname.includes("api.")
   ) {
