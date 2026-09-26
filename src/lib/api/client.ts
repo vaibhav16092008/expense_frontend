@@ -34,7 +34,7 @@ apiClient.interceptors.request.use(
   (config: InternalAxiosRequestConfig) => {
     if (typeof window !== "undefined") {
       const token = localStorage.getItem("expenseiq_access_token");
-      if (token && config.headers) {
+      if (token && token !== "undefined" && token !== "null" && config.headers) {
         config.headers.Authorization = `Bearer ${token}`;
       }
     }
@@ -68,7 +68,8 @@ apiClient.interceptors.response.use(
 
       try {
         const refreshResponse = await apiClient.post("/auth/refresh");
-        const newAccessToken = refreshResponse.data?.accessToken;
+        const payloadData = refreshResponse.data?.data || refreshResponse.data;
+        const newAccessToken = payloadData?.accessToken;
 
         if (newAccessToken && typeof window !== "undefined") {
           localStorage.setItem("expenseiq_access_token", newAccessToken);
