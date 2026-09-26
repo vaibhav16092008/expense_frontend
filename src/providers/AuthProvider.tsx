@@ -25,8 +25,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     try {
       setIsLoading(true);
       const response = await apiClient.get("/auth/me");
-      const userData: UserProfile = response.data?.user || response.data;
-      setUser(userData);
+      const rawUser = response.data?.data || response.data?.user || response.data;
+      if (rawUser && rawUser.id) {
+        setUser({
+          id: rawUser.id,
+          email: rawUser.email,
+          fullName: rawUser.name || rawUser.fullName || rawUser.email,
+          avatarUrl: rawUser.avatarUrl,
+          createdAt: rawUser.createdAt,
+        });
+      } else {
+        setUser(null);
+      }
     } catch {
       setUser(null);
     } finally {
@@ -45,8 +55,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const initAuth = async () => {
       try {
         const response = await apiClient.get("/auth/me");
-        const userData: UserProfile = response.data?.user || response.data;
-        if (isMounted) setUser(userData);
+        const rawUser = response.data?.data || response.data?.user || response.data;
+        if (isMounted && rawUser && rawUser.id) {
+          setUser({
+            id: rawUser.id,
+            email: rawUser.email,
+            fullName: rawUser.name || rawUser.fullName || rawUser.email,
+            avatarUrl: rawUser.avatarUrl,
+            createdAt: rawUser.createdAt,
+          });
+        }
       } catch {
         if (isMounted) setUser(null);
       } finally {
@@ -75,13 +93,25 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     try {
       setIsLoading(true);
       const response = await apiClient.post("/auth/login", payload);
-      const { user: userData, accessToken } = response.data;
+      const payloadData = response.data?.data || response.data;
+      const rawUser = payloadData?.user;
+      const accessToken = payloadData?.accessToken;
 
       if (accessToken) {
         localStorage.setItem("expenseiq_access_token", accessToken);
       }
 
-      setUser(userData || { id: "demo-user", email: payload.email, fullName: "Demo User" });
+      if (rawUser) {
+        setUser({
+          id: rawUser.id,
+          email: rawUser.email,
+          fullName: rawUser.name || rawUser.fullName || rawUser.email,
+          avatarUrl: rawUser.avatarUrl,
+          createdAt: rawUser.createdAt,
+        });
+      } else {
+        setUser({ id: "demo-user", email: payload.email, fullName: payload.email });
+      }
     } catch (err) {
       throw normalizeApiError(err);
     } finally {
@@ -94,7 +124,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setIsLoading(true);
       await apiClient.post("/auth/register", {
         name: payload.fullName,
-        fullName: payload.fullName,
         email: payload.email,
         password: payload.password,
       });
